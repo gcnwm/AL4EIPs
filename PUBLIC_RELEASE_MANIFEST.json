@@ -1,0 +1,22 @@
+{
+  "destination": ".",
+  "generated_at": "2026-04-15T17:19:32.337095+00:00",
+  "generated_templates": [
+    "README.md",
+    ".gitignore",
+    "pixi.toml",
+    "pyproject.toml",
+    "ruff.toml",
+    "ty.toml"
+  ],
+  "included_paths": [
+    "src/fyp_al",
+    "scripts/experiments/run_al_experiment.py",
+    "scripts/experiments/smoke_test_mace.py",
+    "scripts/experiments/smoke_test_nequip.py",
+    "scripts/setup/01_fetch_md17.py",
+    "configs",
+    "tests/test_smoke.py"
+  ],
+  "source_project": "<redacted-source-project>"
+}

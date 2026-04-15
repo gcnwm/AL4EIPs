@@ -1,0 +1,40 @@
+[workspace]
+channels = ["https://prefix.dev/conda-forge"]
+name = "fyp-production"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[system-requirements]
+cuda = "13.2"
+
+[dependencies]
+python = ">=3.13,<3.14"
+pytorch-gpu = ">=2.10.0,<3"
+ase = ">=3.27.0,<4"
+numpy = ">=2.4.0,<3"
+"ruamel.yaml" = ">=0.19.1,<0.20"
+setuptools = "==81.0"
+pytest = ">=8.0,<9"
+
+[feature.mace.pypi-dependencies]
+mace-torch = ">=0.3.13"
+
+[feature.nequip.dependencies]
+nequip = ">=0.17.0,<0.18"
+
+[feature.mace.tasks]
+smoke-mace = "python scripts/experiments/smoke_test_mace.py"
+typecheck-core = "ty check src/fyp_al/geometry.py src/fyp_al/model_backend.py src/fyp_al/mace_backend.py scripts/experiments/run_al_experiment.py scripts/experiments/smoke_test_mace.py scripts/setup/01_fetch_md17.py tests/test_smoke.py"
+
+[feature.nequip.tasks]
+smoke-nequip = "python scripts/experiments/smoke_test_nequip.py"
+typecheck-nequip = "ty check src/fyp_al/nequip_backend.py src/fyp_al/nequip_calc.py src/fyp_al/transforms.py scripts/experiments/smoke_test_nequip.py"
+
+[tasks]
+fmt = "ruff format"
+lint = "ruff check"
+test = "python -m pytest tests/ -v"
+
+[environments]
+default = { features = ["mace"] }
+nequip = { features = ["nequip"] }

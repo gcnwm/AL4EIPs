@@ -1,0 +1,11 @@
+[src]
+exclude = [
+  "**/*.slurm",
+  "src/fyp_al/nequip_backend.py",
+  "src/fyp_al/nequip_calc.py",
+  "src/fyp_al/transforms.py",
+  "scripts/experiments/smoke_test_nequip.py",
+]
+
+[environment]
+python-version = "3.13"

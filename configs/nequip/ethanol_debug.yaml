@@ -1,0 +1,198 @@
+# yamllint disable rule:line-length
+# NequIP debug config for rMD17 ethanol (Active Learning project)
+# Lightweight model for local pipeline verification on RTX 4060 Ti 8GB
+#
+# Usage:
+#   nequip-train -cn ethanol_debug.yaml -cp /absolute/path/to/configs/nequip
+#
+# Data units: eV, Å, eV/Å (forces) — rMD17DataModule converts from kcal/mol automatically
+# Molecule: Ethanol (C₂H₆O, 9 atoms, non-periodic)
+#
+# Expected runtime: ~5–10 min on RTX 4060 Ti 8GB
+# Expected result: Loss should decrease; accuracy is NOT the goal here.
+
+
+# ===========
+#     RUN
+# ===========
+run: [train, test]
+
+
+# =======================
+#   SHARED PARAMETERS
+# =======================
+cutoff_radius: 5.0
+
+# Small model for debug — NOT production quality
+num_layers: 2
+l_max: 1
+num_features: 16
+
+# Ethanol: H, C, O
+model_type_names: [H, C, O]
+chemical_species: ${model_type_names}
+
+# Metric for checkpointing, early stopping, LR scheduling
+monitored_metric: val0_epoch/weighted_sum
+
+
+# ============
+#     DATA
+# ============
+data:
+  _target_: nequip.data.datamodule.rMD17DataModule
+  dataset: ethanol
+  data_source_dir: ${hydra:runtime.cwd}/data/rmd17
+  seed: 42
+
+  # Debug: use 200 samples for fast iteration (~2 min on RTX 4060 Ti)
+  # Comment out subset_len and change split to [950, 50, 1000] for full local run
+  subset_len: 200
+  train_val_test_split: [150, 25, 25]
+
+  transforms:
+    # Non-periodic: replace cell with identity matrix BEFORE neighbor list
+    - _target_: nequip.data.transforms.NonPeriodicCellTransform
+    - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
+      model_type_names: ${model_type_names}
+    - _target_: nequip.data.transforms.NeighborListTransform
+      r_max: ${cutoff_radius}
+
+  train_dataloader:
+    _target_: torch.utils.data.DataLoader
+    batch_size: 5
+    num_workers: 4
+    shuffle: true
+  val_dataloader:
+    _target_: torch.utils.data.DataLoader
+    batch_size: 10
+    num_workers: ${data.train_dataloader.num_workers}
+  test_dataloader: ${data.val_dataloader}
+
+  stats_manager:
+    _target_: nequip.data.CommonDataStatisticsManager
+    type_names: ${model_type_names}
+    dataloader_kwargs:
+      batch_size: 10
+
+
+# =============
+#    TRAINER
+# =============
+trainer:
+  _target_: lightning.Trainer
+  accelerator: gpu
+  enable_checkpointing: true
+  max_epochs: 50
+  log_every_n_steps: 5
+
+  # TensorBoard logger
+  logger:
+    _target_: lightning.pytorch.loggers.TensorBoardLogger
+    save_dir: ${hydra:runtime.output_dir}
+    version: ${hydra:job.name}
+
+  callbacks:
+    # Early stopping — generous patience for debug
+    - _target_: lightning.pytorch.callbacks.EarlyStopping
+      monitor: ${monitored_metric}
+      min_delta: 1e-4
+      patience: 20
+
+    # Model checkpointing
+    - _target_: lightning.pytorch.callbacks.ModelCheckpoint
+      monitor: ${monitored_metric}
+      dirpath: ${hydra:runtime.output_dir}
+      filename: best
+      save_last: true
+
+    # LR monitor
+    - _target_: lightning.pytorch.callbacks.LearningRateMonitor
+      logging_interval: epoch
+
+
+# =====================
+#    TRAINING MODULE
+# =====================
+training_module:
+  _target_: nequip.train.EMALightningModule
+  ema_decay: 0.999
+
+  # ---- Loss ----
+  # Energy + forces only (no stress for molecular systems)
+  loss:
+    _target_: nequip.train.EnergyForceLoss
+    per_atom_energy: true
+    coeffs:
+      total_energy: 1.0
+      forces: 1.0
+
+  # ---- Metrics ----
+  val_metrics:
+    _target_: nequip.train.EnergyForceMetrics
+    coeffs:
+      total_energy_rmse: 1.0
+      forces_rmse: 1.0
+      total_energy_mae: null
+      per_atom_energy_mae: null
+      forces_mae: null
+
+  train_metrics: ${training_module.val_metrics}
+  test_metrics: ${training_module.val_metrics}
+
+  # ---- Optimizer ----
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.005
+
+  # ---- LR scheduler ----
+  lr_scheduler:
+    scheduler:
+      _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+      factor: 0.5
+      patience: 10
+      threshold: 0.1
+      min_lr: 1e-6
+    monitor: ${monitored_metric}
+    interval: epoch
+    frequency: 1
+
+  # ---- Model ----
+  model:
+    _target_: nequip.model.NequIPGNNModel
+
+    # -- reproducibility --
+    seed: 42
+    model_dtype: float32
+
+    # -- atom types and cutoff --
+    type_names: ${model_type_names}
+    r_max: ${cutoff_radius}
+
+    # -- Bessel radial basis --
+    num_bessels: 8
+    bessel_trainable: false
+    polynomial_cutoff_p: 6
+
+    # -- interaction layers (small for debug) --
+    num_layers: ${num_layers}
+    l_max: ${l_max}
+    parity: true
+    num_features: ${num_features}
+
+    # -- radial MLP --
+    radial_mlp_depth: 2
+    radial_mlp_width: 64
+
+    # -- energy shifts & scales from dataset statistics --
+    avg_num_neighbors: ${training_data_stats:num_neighbors_mean}
+    per_type_energy_scales: ${training_data_stats:per_type_forces_rms}
+    per_type_energy_shifts: ${training_data_stats:per_atom_energy_mean}
+    per_type_energy_scales_trainable: false
+    per_type_energy_shifts_trainable: true
+
+    # -- NO ZBL pair potential (molecular system) --
+    # -- NO stress output (non-periodic) --
+
+    # -- force output --
+    do_derivatives: true

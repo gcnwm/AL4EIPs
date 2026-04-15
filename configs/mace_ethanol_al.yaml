@@ -1,0 +1,32 @@
+# MACE hyperparameters for ethanol active learning (plan §3.5)
+#
+# This file is a *reference* for human readers.  The actual CLI args are
+# built programmatically in src/fyp_al/mace_backend.py via _mace_base_args().
+
+model: MACE
+hidden_irreps: "32x0e + 32x1o"
+r_max: 6.0
+max_ell: 3
+correlation: 3
+num_interactions: 2
+
+max_num_epochs: 200
+batch_size: 5
+valid_batch_size: 10
+lr: 0.01
+amsgrad: true
+scheduler: ReduceLROnPlateau
+lr_scheduler_gamma: 0.5
+patience: 10
+
+energy_weight: 1.0
+forces_weight: 100.0
+E0s: average
+
+swa: true
+start_swa: 150          # 75% of max_num_epochs
+ema: true
+ema_decay: 0.99
+
+device: cuda
+default_dtype: float64
