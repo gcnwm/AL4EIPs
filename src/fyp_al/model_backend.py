@@ -11,9 +11,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 from ase import Atoms
+
+EvaluationPolicyName = Literal["ensemble_mean", "best_validation", "fixed_member"]
 
 
 @dataclass
@@ -88,7 +91,7 @@ class ModelBackend(ABC):
         test_energies: np.ndarray,
         test_forces: list[np.ndarray],
     ) -> dict[str, float]:
-        """Evaluate on held-out test set.
+        """Evaluate one checkpoint on a held-out test set.
 
         Returns
         -------
@@ -97,3 +100,31 @@ class ModelBackend(ABC):
             ``forces_rmse`` — all in eV / eV/Å.
         """
         ...
+
+    def evaluate_committee(
+        self,
+        committee_result: CommitteeTrainingResult,
+        test_atoms: list[Atoms],
+        test_energies: np.ndarray,
+        test_forces: list[np.ndarray],
+        policy: EvaluationPolicyName = "best_validation",
+    ) -> dict[str, float]:
+        """Evaluate a committee according to the preregistered policy.
+
+        Backends override this for true ensemble/head-mean predictions.  The
+        fallback supports fixed-member and best-validation policies only.
+        """
+        if policy == "fixed_member":
+            first_checkpoint = next(iter(committee_result.checkpoints.values()))
+            return self.evaluate(
+                first_checkpoint, test_atoms, test_energies, test_forces
+            )
+        if policy in {"best_validation", "ensemble_mean"}:
+            return self.evaluate(
+                committee_result.best_checkpoint,
+                test_atoms,
+                test_energies,
+                test_forces,
+            )
+        msg = f"Unknown evaluation policy: {policy}"
+        raise ValueError(msg)

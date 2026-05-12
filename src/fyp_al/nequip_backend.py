@@ -18,6 +18,7 @@ import torch
 from ase import Atoms
 from ruamel.yaml import YAML
 
+from fyp_al.al_protocol import force_disagreement_score
 from fyp_al.model_backend import (
     CommitteeTrainingResult,
     ModelBackend,
@@ -474,7 +475,7 @@ class NequIPBackend(ModelBackend):
                 stacked = np.stack(
                     [member[local_idx] for member in committee_forces], axis=0
                 )
-                disagreements[start + local_idx] = np.std(stacked, axis=0).max()
+                disagreements[start + local_idx] = force_disagreement_score(stacked)
 
         del models
         if torch.cuda.is_available():
@@ -487,13 +488,49 @@ class NequIPBackend(ModelBackend):
         )
         return disagreements
 
-    def evaluate(
-        self,
-        checkpoint: Path,
-        test_atoms: list[Atoms],
+    @staticmethod
+    def _metrics_from_predictions(
+        pred_energies: np.ndarray,
+        pred_forces: list[np.ndarray],
         test_energies: np.ndarray,
         test_forces: list[np.ndarray],
     ) -> dict[str, float]:
+        pred_e_arr = np.asarray(pred_energies, dtype=float)
+        true_e_arr = np.asarray(test_energies, dtype=float)
+        pred_f_flat = np.concatenate([f.reshape(-1) for f in pred_forces])
+        true_f_flat = np.concatenate([f.reshape(-1) for f in test_forces])
+        return {
+            "energy_mae": float(np.mean(np.abs(pred_e_arr - true_e_arr))),
+            "forces_mae": float(np.mean(np.abs(pred_f_flat - true_f_flat))),
+            "energy_rmse": float(np.sqrt(np.mean((pred_e_arr - true_e_arr) ** 2))),
+            "forces_rmse": float(np.sqrt(np.mean((pred_f_flat - true_f_flat) ** 2))),
+        }
+
+    @staticmethod
+    def _mean_predictions(
+        predictions: list[tuple[np.ndarray, list[np.ndarray]]],
+    ) -> tuple[np.ndarray, list[np.ndarray]]:
+        if not predictions:
+            msg = "at least one prediction set is required"
+            raise ValueError(msg)
+        mean_energies = np.mean(
+            np.stack([energies for energies, _ in predictions]),
+            axis=0,
+        )
+        n_structures = len(predictions[0][1])
+        mean_forces = [
+            np.mean(np.stack([forces[idx] for _, forces in predictions]), axis=0)
+            for idx in range(n_structures)
+        ]
+        return mean_energies, mean_forces
+
+    def _predict_checkpoint(
+        self,
+        checkpoint: Path,
+        test_atoms: list[Atoms],
+        *,
+        batch_size: int = 64,
+    ) -> tuple[np.ndarray, list[np.ndarray]]:
         from nequip.data import AtomicDataDict, from_ase
         from nequip.data.transforms import (
             ChemicalSpeciesToAtomTypeMapper,
@@ -507,8 +544,6 @@ class NequIPBackend(ModelBackend):
 
         set_global_state()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        batch_size = 64
-
         model = ModelFromCheckpoint(str(checkpoint))["sole_model"]
         model.eval().to(device)
 
@@ -521,19 +556,17 @@ class NequIPBackend(ModelBackend):
 
         pred_e: list[float] = []
         pred_f: list[np.ndarray] = []
-
         for start in range(0, len(test_atoms), batch_size):
             batch_atoms = test_atoms[start : start + batch_size]
             data_list = []
             for atoms in batch_atoms:
                 data = from_ase(atoms)
-                for t in transforms:
-                    data = t(data)
+                for transform in transforms:
+                    data = transform(data)
                 data_list.append(data)
 
             batch = AtomicDataDict.batched_from_list(data_list)
             AtomicDataDict.to_(batch, device)
-
             # NequIP computes forces via autograd.grad(energy, positions),
             # so positions must have requires_grad=True and no_grad is forbidden.
             batch[AtomicDataDict.POSITIONS_KEY].requires_grad_(True)
@@ -554,18 +587,45 @@ class NequIPBackend(ModelBackend):
             )
             del outputs
 
-        pred_e_arr = np.asarray(pred_e)
-        true_e_arr = np.asarray(test_energies)
-        pred_f_flat = np.concatenate([f.reshape(-1) for f in pred_f])
-        true_f_flat = np.concatenate([f.reshape(-1) for f in test_forces])
-
         del model
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        return np.asarray(pred_e, dtype=float), pred_f
 
-        return {
-            "energy_mae": float(np.mean(np.abs(pred_e_arr - true_e_arr))),
-            "forces_mae": float(np.mean(np.abs(pred_f_flat - true_f_flat))),
-            "energy_rmse": float(np.sqrt(np.mean((pred_e_arr - true_e_arr) ** 2))),
-            "forces_rmse": float(np.sqrt(np.mean((pred_f_flat - true_f_flat) ** 2))),
-        }
+    def evaluate(
+        self,
+        checkpoint: Path,
+        test_atoms: list[Atoms],
+        test_energies: np.ndarray,
+        test_forces: list[np.ndarray],
+    ) -> dict[str, float]:
+        pred_e, pred_f = self._predict_checkpoint(checkpoint, test_atoms)
+        return self._metrics_from_predictions(
+            pred_e, pred_f, test_energies, test_forces
+        )
+
+    def evaluate_committee(
+        self,
+        committee_result: CommitteeTrainingResult,
+        test_atoms: list[Atoms],
+        test_energies: np.ndarray,
+        test_forces: list[np.ndarray],
+        policy: str = "best_validation",
+    ) -> dict[str, float]:
+        if policy == "ensemble_mean":
+            predictions = [
+                self._predict_checkpoint(checkpoint, test_atoms)
+                for checkpoint in committee_result.checkpoints.values()
+            ]
+            pred_e, pred_f = self._mean_predictions(predictions)
+            return self._metrics_from_predictions(
+                pred_e, pred_f, test_energies, test_forces
+            )
+        if policy == "fixed_member":
+            checkpoint = next(iter(committee_result.checkpoints.values()))
+        elif policy == "best_validation":
+            checkpoint = committee_result.best_checkpoint
+        else:
+            msg = f"Unknown evaluation policy: {policy}"
+            raise ValueError(msg)
+        return self.evaluate(checkpoint, test_atoms, test_energies, test_forces)

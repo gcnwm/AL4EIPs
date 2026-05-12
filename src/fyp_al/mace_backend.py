@@ -24,6 +24,7 @@ import numpy as np
 import torch
 from ase import Atoms
 
+from fyp_al.al_protocol import force_disagreement_score
 from fyp_al.model_backend import (
     CommitteeTrainingResult,
     ModelBackend,
@@ -130,15 +131,34 @@ def _find_mace_model(model_dir: Path, name: str) -> Path:
     raise FileNotFoundError(msg)
 
 
-def _mace_evaluate(
-    model_path: Path,
-    test_atoms: list[Atoms],
+def _metrics_from_predictions(
+    pred_energies: np.ndarray,
+    pred_forces: list[np.ndarray],
     test_energies: np.ndarray,
     test_forces: list[np.ndarray],
+) -> dict[str, float]:
+    """Compute standard energy/force error metrics from predictions."""
+    pred_e_arr = np.asarray(pred_energies, dtype=float)
+    true_e_arr = np.asarray(test_energies, dtype=float)
+    pred_f_flat = np.concatenate([f.reshape(-1) for f in pred_forces])
+    true_f_flat = np.concatenate([f.reshape(-1) for f in test_forces])
+
+    return {
+        "energy_mae": float(np.mean(np.abs(pred_e_arr - true_e_arr))),
+        "forces_mae": float(np.mean(np.abs(pred_f_flat - true_f_flat))),
+        "energy_rmse": float(np.sqrt(np.mean((pred_e_arr - true_e_arr) ** 2))),
+        "forces_rmse": float(np.sqrt(np.mean((pred_f_flat - true_f_flat) ** 2))),
+    }
+
+
+def _mace_predict_single(
+    model_path: Path,
+    test_atoms: list[Atoms],
+    *,
     device: str = "cuda",
     head: str | None = None,
-) -> dict[str, float]:
-    """Evaluate a single MACE model on a test set."""
+) -> tuple[np.ndarray, list[np.ndarray]]:
+    """Predict energies and forces for one MACE model/head."""
     from mace.calculators import MACECalculator
 
     if head is not None:
@@ -157,24 +177,46 @@ def _mace_evaluate(
 
     pred_e: list[float] = []
     pred_f: list[np.ndarray] = []
-
     for atoms in test_atoms:
         atoms_copy = atoms.copy()
         atoms_copy.calc = calc
-        pred_e.append(atoms_copy.get_potential_energy())
+        pred_e.append(float(atoms_copy.get_potential_energy()))
         pred_f.append(atoms_copy.get_forces())
+    return np.asarray(pred_e, dtype=float), pred_f
 
-    pred_e_arr = np.asarray(pred_e)
-    true_e_arr = np.asarray(test_energies)
-    pred_f_flat = np.concatenate([f.reshape(-1) for f in pred_f])
-    true_f_flat = np.concatenate([f.reshape(-1) for f in test_forces])
 
-    return {
-        "energy_mae": float(np.mean(np.abs(pred_e_arr - true_e_arr))),
-        "forces_mae": float(np.mean(np.abs(pred_f_flat - true_f_flat))),
-        "energy_rmse": float(np.sqrt(np.mean((pred_e_arr - true_e_arr) ** 2))),
-        "forces_rmse": float(np.sqrt(np.mean((pred_f_flat - true_f_flat) ** 2))),
-    }
+def _mean_predictions(
+    predictions: list[tuple[np.ndarray, list[np.ndarray]]],
+) -> tuple[np.ndarray, list[np.ndarray]]:
+    """Average a list of structure-aligned energy/force predictions."""
+    if not predictions:
+        msg = "at least one prediction set is required"
+        raise ValueError(msg)
+    mean_energies = np.mean(np.stack([energies for energies, _ in predictions]), axis=0)
+    n_structures = len(predictions[0][1])
+    mean_forces = [
+        np.mean(np.stack([forces[idx] for _, forces in predictions]), axis=0)
+        for idx in range(n_structures)
+    ]
+    return mean_energies, mean_forces
+
+
+def _mace_evaluate(
+    model_path: Path,
+    test_atoms: list[Atoms],
+    test_energies: np.ndarray,
+    test_forces: list[np.ndarray],
+    device: str = "cuda",
+    head: str | None = None,
+) -> dict[str, float]:
+    """Evaluate a single MACE model on a test set."""
+    pred_e, pred_f = _mace_predict_single(
+        model_path,
+        test_atoms,
+        device=device,
+        head=head,
+    )
+    return _metrics_from_predictions(pred_e, pred_f, test_energies, test_forces)
 
 
 # ---------------------------------------------------------------------------
@@ -346,7 +388,7 @@ class MACEQBCBackend(ModelBackend):
             atoms_copy.get_potential_energy()
             forces_comm = atoms_copy.calc.results["forces_comm"]
             # forces_comm: (n_models, n_atoms, 3)
-            disagreements[idx] = float(np.std(forces_comm, axis=0).max())
+            disagreements[idx] = force_disagreement_score(forces_comm)
 
         log.info(
             "  Disagreement — mean: %.6f, max: %.6f eV/Å",
@@ -371,6 +413,31 @@ class MACEQBCBackend(ModelBackend):
             test_forces,
             device=self.device,
         )
+
+    def evaluate_committee(
+        self,
+        committee_result: CommitteeTrainingResult,
+        test_atoms: list[Atoms],
+        test_energies: np.ndarray,
+        test_forces: list[np.ndarray],
+        policy: str = "best_validation",
+    ) -> dict[str, float]:
+        """Evaluate QBC by fixed member, best checkpoint, or ensemble mean."""
+        if policy == "ensemble_mean":
+            predictions = [
+                _mace_predict_single(path, test_atoms, device=self.device)
+                for path in committee_result.checkpoints.values()
+            ]
+            pred_e, pred_f = _mean_predictions(predictions)
+            return _metrics_from_predictions(pred_e, pred_f, test_energies, test_forces)
+        if policy == "fixed_member":
+            checkpoint = next(iter(committee_result.checkpoints.values()))
+        elif policy == "best_validation":
+            checkpoint = committee_result.best_checkpoint
+        else:
+            msg = f"Unknown evaluation policy: {policy}"
+            raise ValueError(msg)
+        return self.evaluate(checkpoint, test_atoms, test_energies, test_forces)
 
 
 # ---------------------------------------------------------------------------
@@ -610,7 +677,7 @@ class MACEMHCBackend(ModelBackend):
                 atoms_copy.get_potential_energy()
                 forces_per_head.append(atoms_copy.get_forces())
             stacked = np.stack(forces_per_head, axis=0)  # (n_heads, n_atoms, 3)
-            disagreements[idx] = float(np.std(stacked, axis=0).max())
+            disagreements[idx] = force_disagreement_score(stacked)
 
         log.info(
             "  Disagreement — mean: %.6f, max: %.6f eV/Å",
@@ -636,3 +703,44 @@ class MACEMHCBackend(ModelBackend):
             device=self.device,
             head="head0",
         )
+
+    def evaluate_committee(
+        self,
+        committee_result: CommitteeTrainingResult,
+        test_atoms: list[Atoms],
+        test_energies: np.ndarray,
+        test_forces: list[np.ndarray],
+        policy: str = "best_validation",
+    ) -> dict[str, float]:
+        """Evaluate MHC by fixed head or preregistered head-mean prediction."""
+        head_names_raw = committee_result.extra.get(
+            "head_names", [f"head{i}" for i in range(len(committee_result.checkpoints))]
+        )
+        head_names = (
+            list(head_names_raw)
+            if isinstance(head_names_raw, list)
+            else [str(head_names_raw)]
+        )
+        if policy == "ensemble_mean":
+            predictions = [
+                _mace_predict_single(
+                    committee_result.best_checkpoint,
+                    test_atoms,
+                    device=self.device,
+                    head=str(head_name),
+                )
+                for head_name in head_names
+            ]
+            pred_e, pred_f = _mean_predictions(predictions)
+            return _metrics_from_predictions(pred_e, pred_f, test_energies, test_forces)
+        if policy in {"fixed_member", "best_validation"}:
+            return _mace_evaluate(
+                committee_result.best_checkpoint,
+                test_atoms,
+                test_energies,
+                test_forces,
+                device=self.device,
+                head=str(head_names[0]),
+            )
+        msg = f"Unknown evaluation policy: {policy}"
+        raise ValueError(msg)
