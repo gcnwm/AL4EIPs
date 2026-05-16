@@ -1,0 +1,175 @@
+{
+  "arm_summaries": [
+    {
+      "arm": "NequIP-QBC",
+      "energy_mae_ci_95": [
+        -0.44865771034031976,
+        9.240769999273837
+      ],
+      "energy_mae_mean": 4.396056144466759,
+      "energy_mae_std": 1.9502597750079969,
+      "forces_mae_ci_95": [
+        8.669577729582336,
+        11.462373452966325
+      ],
+      "forces_mae_mean": 10.06597559127433,
+      "forces_mae_std": 0.5621257851715833,
+      "n_seeds": 3,
+      "total_time_h_mean": 33.71758713724437,
+      "total_time_h_std": 0.3068409840586082
+    },
+    {
+      "arm": "MACE-QBC",
+      "energy_mae_ci_95": [
+        1.186816180374983,
+        2.503624092525273
+      ],
+      "energy_mae_mean": 1.8452201364501282,
+      "energy_mae_std": 0.2650432594621463,
+      "forces_mae_ci_95": [
+        7.278662099265238,
+        10.826536783407887
+      ],
+      "forces_mae_mean": 9.052599441336563,
+      "forces_mae_std": 0.7141058781404689,
+      "n_seeds": 3,
+      "total_time_h_mean": 14.02880032868297,
+      "total_time_h_std": 0.2626691827404582
+    },
+    {
+      "arm": "NequIP-Random",
+      "energy_mae_ci_95": [
+        1.1193070429596261,
+        5.508108912983808
+      ],
+      "energy_mae_mean": 3.313707977971717,
+      "energy_mae_std": 0.8833652517057557,
+      "forces_mae_ci_95": [
+        10.176074927945002,
+        11.883689393118946
+      ],
+      "forces_mae_mean": 11.029882160531974,
+      "forces_mae_std": 0.34370366366902255,
+      "n_seeds": 3,
+      "total_time_h_mean": 8.038302373422518,
+      "total_time_h_std": 0.12778657547050204
+    },
+    {
+      "arm": "MACE-Random",
+      "energy_mae_ci_95": [
+        1.4956095801047011,
+        2.2367868262806043
+      ],
+      "energy_mae_mean": 1.8661982031926527,
+      "energy_mae_std": 0.1491819963663906,
+      "forces_mae_ci_95": [
+        8.958691914413576,
+        10.37126285170312
+      ],
+      "forces_mae_mean": 9.664977383058348,
+      "forces_mae_std": 0.2843181621147407,
+      "n_seeds": 3,
+      "total_time_h_mean": 2.9201416140353236,
+      "total_time_h_std": 0.08261641337748653
+    }
+  ],
+  "claim_boundary": "architecture-matched QBC vs random under fixed-member inference",
+  "comparisons": [
+    {
+      "arm_ci_95": [
+        7.278662099265238,
+        10.826536783407887
+      ],
+      "arm_mean": 9.052599441336563,
+      "arm_std": 0.7141058781404689,
+      "baseline_ci_95": [
+        8.958691914413576,
+        10.37126285170312
+      ],
+      "baseline_mean": 9.664977383058348,
+      "baseline_std": 0.2843181621147407,
+      "cohens_d": -1.1267307988900883,
+      "comparison": "MACE-QBC vs MACE-Random",
+      "effect_size": "large",
+      "metric": "forces_mae",
+      "n_per_group": 3,
+      "pct_change": -6.336051471731503,
+      "significant_005": false,
+      "unit": "meV/\u00c5",
+      "welch_p": 0.2736083343759104
+    },
+    {
+      "arm_ci_95": [
+        1.186816180374983,
+        2.503624092525273
+      ],
+      "arm_mean": 1.8452201364501282,
+      "arm_std": 0.2650432594621463,
+      "baseline_ci_95": [
+        1.4956095801047011,
+        2.2367868262806043
+      ],
+      "baseline_mean": 1.8661982031926527,
+      "baseline_std": 0.1491819963663906,
+      "cohens_d": -0.09754434308730511,
+      "comparison": "MACE-QBC vs MACE-Random",
+      "effect_size": "negligible",
+      "metric": "energy_mae",
+      "n_per_group": 3,
+      "pct_change": -1.1241071128798497,
+      "significant_005": false,
+      "unit": "meV",
+      "welch_p": 0.9121173076684536
+    },
+    {
+      "arm_ci_95": [
+        8.669577729582336,
+        11.462373452966325
+      ],
+      "arm_mean": 10.06597559127433,
+      "arm_std": 0.5621257851715833,
+      "baseline_ci_95": [
+        10.176074927945002,
+        11.883689393118946
+      ],
+      "baseline_mean": 11.029882160531974,
+      "baseline_std": 0.34370366366902255,
+      "cohens_d": -2.0689321000739045,
+      "comparison": "NequIP-QBC vs NequIP-Random",
+      "effect_size": "large",
+      "metric": "forces_mae",
+      "n_per_group": 3,
+      "pct_change": -8.739046847724019,
+      "significant_005": false,
+      "unit": "meV/\u00c5",
+      "welch_p": 0.07726930213472133
+    },
+    {
+      "arm_ci_95": [
+        -0.44865771034031976,
+        9.240769999273837
+      ],
+      "arm_mean": 4.396056144466759,
+      "arm_std": 1.9502597750079969,
+      "baseline_ci_95": [
+        1.1193070429596261,
+        5.508108912983808
+      ],
+      "baseline_mean": 3.313707977971717,
+      "baseline_std": 0.8833652517057557,
+      "cohens_d": 0.7149355783546819,
+      "comparison": "NequIP-QBC vs NequIP-Random",
+      "effect_size": "medium",
+      "metric": "energy_mae",
+      "n_per_group": 3,
+      "pct_change": 32.6627504200758,
+      "significant_005": false,
+      "unit": "meV",
+      "welch_p": 0.4501293467803642
+    }
+  ],
+  "description": "Statistical summary with effect sizes and confidence intervals",
+  "protocol_version": "v4",
+  "results_dir": "raw thesis workspace excluded from supplementary archive; summary published under fyp-production/reports/analysis/",
+  "run_id": "v4_primary_fixed_member"
+}

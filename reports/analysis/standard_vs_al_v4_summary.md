@@ -1,5 +1,5 @@
 # Standard/passive baseline vs v4 AL summary
-Source of truth for AL: `results/al_v4/v4_primary_fixed_member` final metric row at N=550. No AL reruns are included here.
+Source of truth for the published supplement: the lightweight endpoint summaries in `fyp-production/reports/analysis/`. Raw HPC training workspaces are excluded from the supplementary archive.
 
 | Architecture | Method | Labels | Energy MAE (meV) | Force MAE (meV/Å) | Total training time (h) |
 |---|---:|---:|---:|---:|---:|

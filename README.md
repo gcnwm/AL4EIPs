@@ -39,9 +39,9 @@ pixi run -e nequip python scripts/experiments/run_al_experiment.py --backend neq
 
 ## Notes
 
-- This release intentionally excludes notebooks, reports, poster assets, cached
-  outputs, and other non-production artifacts from the thesis workspace.
-- Model checkpoints are published separately in the companion Hugging Face
-  models repository.
+- This release intentionally excludes notebooks, poster assets, cached
+  outputs, and other non-production artefacts from the thesis workspace.
+- Curated model checkpoints are supplied in the sibling `model/` folder of the
+  supplementary archive.
 - Licensing is intentionally left for a manual maintainer decision before wider
   redistribution.

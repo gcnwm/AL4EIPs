@@ -8,7 +8,7 @@
     "labels": 550,
     "method": "AL QBC (v4 fixed-member)",
     "seeds": 3,
-    "source": "results/al_v4/v4_primary_fixed_member/mace_qbc_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 14.02880032868297,
     "time_sd": 0.2626691827404582
   },
@@ -21,7 +21,7 @@
     "labels": 550,
     "method": "AL RANDOM (v4 fixed-member)",
     "seeds": 3,
-    "source": "results/al_v4/v4_primary_fixed_member/mace_random_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 2.920141614035324,
     "time_sd": 0.08261641337748653
   },
@@ -34,7 +34,7 @@
     "labels": 550,
     "method": "AL QBC (v4 fixed-member)",
     "seeds": 3,
-    "source": "results/al_v4/v4_primary_fixed_member/nequip_qbc_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 33.717587137244365,
     "time_sd": 0.3068409840586082
   },
@@ -47,7 +47,7 @@
     "labels": 550,
     "method": "AL RANDOM (v4 fixed-member)",
     "seeds": 3,
-    "source": "results/al_v4/v4_primary_fixed_member/nequip_random_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 8.038302373422518,
     "time_sd": 0.12778657547050204
   },
@@ -60,7 +60,7 @@
     "labels": 550,
     "method": "Passive single model (v4 split)",
     "seeds": 3,
-    "source": "results/passive_v4_550/mace_passive_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 0.46542607561305716,
     "time_sd": 0.00205628734150799
   },
@@ -73,7 +73,7 @@
     "labels": 550,
     "method": "Passive single model (v4 split)",
     "seeds": 3,
-    "source": "results/passive_v4_550/nequip_passive_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 1.1278075831024736,
     "time_sd": 0.061328294683740354
   },
@@ -86,7 +86,7 @@
     "labels": 950,
     "method": "Passive single model (Phase 2 950 train + 50 valid)",
     "seeds": 1,
-    "source": "results/phase2_metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": NaN,
     "time_sd": NaN
   },
@@ -99,7 +99,7 @@
     "labels": 550,
     "method": "AL MHC (historical, not v4)",
     "seeds": 3,
-    "source": "results/al/mace_mhc_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 5.980158305035697,
     "time_sd": 0.07597323606076077
   },
@@ -112,7 +112,7 @@
     "labels": 550,
     "method": "AL QBC (historical)",
     "seeds": 3,
-    "source": "results/al/mace_qbc_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 14.018377466621223,
     "time_sd": 0.26797571651616675
   },
@@ -125,7 +125,7 @@
     "labels": 550,
     "method": "AL Random (historical)",
     "seeds": 4,
-    "source": "results/al/random_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 3.8416219442917243,
     "time_sd": 0.4808620456435686
   },
@@ -138,7 +138,7 @@
     "labels": 550,
     "method": "AL QBC (historical)",
     "seeds": 3,
-    "source": "results/al/nequip_qbc_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 16.617268126783546,
     "time_sd": 0.5966453634725457
   },
@@ -151,7 +151,7 @@
     "labels": 550,
     "method": "AL Random (historical)",
     "seeds": 3,
-    "source": "results/al/nequip_random_seed*/metrics.json",
+    "source": "published summary row in fyp-production/reports/analysis/passive_vs_al_comparison.json; raw thesis workspace excluded from supplementary archive",
     "time_mean": 5.312561826374796,
     "time_sd": 0.32141848823650127
   }

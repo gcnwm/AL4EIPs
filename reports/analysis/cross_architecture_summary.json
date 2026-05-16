@@ -1,0 +1,48 @@
+{
+  "arms": {
+    "mace_qbc": {
+      "energy_mae_mean": 1.8452201364501282,
+      "energy_mae_std": 0.2650432594621463,
+      "forces_mae_mean": 9.052599441336563,
+      "forces_mae_std": 0.7141058781404689,
+      "label": "MACE-QBC",
+      "n_seeds": 3,
+      "total_time_mean_h": 14.02880032868297,
+      "total_time_std_h": 0.2626691827404582
+    },
+    "mace_random": {
+      "energy_mae_mean": 1.8661982031926527,
+      "energy_mae_std": 0.1491819963663906,
+      "forces_mae_mean": 9.664977383058348,
+      "forces_mae_std": 0.2843181621147407,
+      "label": "MACE-Random",
+      "n_seeds": 3,
+      "total_time_mean_h": 2.9201416140353236,
+      "total_time_std_h": 0.08261641337748653
+    },
+    "nequip_qbc": {
+      "energy_mae_mean": 4.396056144466759,
+      "energy_mae_std": 1.9502597750079969,
+      "forces_mae_mean": 10.06597559127433,
+      "forces_mae_std": 0.5621257851715833,
+      "label": "NequIP-QBC",
+      "n_seeds": 3,
+      "total_time_mean_h": 33.71758713724437,
+      "total_time_std_h": 0.3068409840586082
+    },
+    "nequip_random": {
+      "energy_mae_mean": 3.313707977971717,
+      "energy_mae_std": 0.8833652517057557,
+      "forces_mae_mean": 11.029882160531974,
+      "forces_mae_std": 0.34370366366902255,
+      "label": "NequIP-Random",
+      "n_seeds": 3,
+      "total_time_mean_h": 8.038302373422518,
+      "total_time_std_h": 0.12778657547050204
+    }
+  },
+  "claim_boundary": "architecture-matched QBC vs random under fixed-member inference",
+  "protocol_version": "v4",
+  "results_dir": "raw thesis workspace excluded from supplementary archive; summary published under fyp-production/reports/analysis/",
+  "run_id": "v4_primary_fixed_member"
+}

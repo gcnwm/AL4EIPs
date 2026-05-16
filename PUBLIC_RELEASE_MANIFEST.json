@@ -22,7 +22,19 @@
     "scripts/hpc/mace_mhc_v4_passive.slurm",
     "reports/analysis/passive_vs_al_comparison.md",
     "reports/analysis/passive_vs_al_comparison.json",
-    "reports/analysis/standard_vs_al_v4_summary.md"
+    "reports/analysis/standard_vs_al_v4_summary.md",
+    "scripts/analysis/analyze_torsional_coverage_v4.py",
+    "reports/analysis/torsional_coverage_summary.csv",
+    "reports/analysis/torsional_coverage_summary.json",
+    "reports/analysis/torsional_coverage_selected_sets.png",
+    "reports/analysis/cross_arch_forces_learning.png",
+    "reports/analysis/cross_arch_energy_learning.png",
+    "reports/analysis/final_seed_metrics_presentation.png",
+    "reports/analysis/cost_force_tradeoff.png",
+    "reports/analysis/statistical_summary.json",
+    "reports/analysis/cross_architecture_summary.json",
+    "reports/analysis/final_seed_metrics.csv",
+    "reports/analysis/al_workflow_schematic.png"
   ],
   "source_project": "<redacted-source-project>"
 }

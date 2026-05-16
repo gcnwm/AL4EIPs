@@ -1,0 +1,50 @@
+{
+  "description": "Torsional coverage and high-reference-force enrichment for final v4 selected labels.",
+  "high_force_threshold_ev_per_a": 2.6380984755917787,
+  "npz_path": "rMD17 ethanol dataset fetched with fyp-production/scripts/setup/01_fetch_md17.py",
+  "pool_indices_sha256": "53ecca250c2a5f640b552ae4bf2cd1a147fbc3b0d7effae6a4a82d0f21476325",
+  "run_id": "v4_primary_fixed_member",
+  "split_root": "raw thesis workspace excluded from supplementary archive; torsional summary published under fyp-production/reports/analysis/",
+  "summaries": [
+    {
+      "high_force_decile_percent": 36.78787878787879,
+      "mean_reference_force_rms_ev_per_a": 2.485875747599507,
+      "median_cc_torsion_deg": 4.411790744467304,
+      "median_co_torsion_deg": -8.862872364683438,
+      "method": "QBC",
+      "n_selected": 3300,
+      "n_unique": 2301,
+      "occupied_30deg_bins": 144,
+      "occupied_30deg_bins_percent": 100.0,
+      "source": "MACE-QBC and NequIP-QBC final labelled sets; 3 seeds each"
+    },
+    {
+      "high_force_decile_percent": 10.151515151515152,
+      "mean_reference_force_rms_ev_per_a": 2.0089595047194106,
+      "median_cc_torsion_deg": -14.53376113998415,
+      "median_co_torsion_deg": -4.978289761581204,
+      "method": "Random AL",
+      "n_selected": 3300,
+      "n_unique": 2969,
+      "occupied_30deg_bins": 142,
+      "occupied_30deg_bins_percent": 98.61111111111111,
+      "source": "MACE-Random and NequIP-Random final labelled sets; 3 seeds each"
+    },
+    {
+      "high_force_decile_percent": 10.666666666666668,
+      "mean_reference_force_rms_ev_per_a": 2.0137965998472094,
+      "median_cc_torsion_deg": 4.508310203658532,
+      "median_co_torsion_deg": -5.387443961934305,
+      "method": "Passive",
+      "n_selected": 1650,
+      "n_unique": 1642,
+      "occupied_30deg_bins": 142,
+      "occupied_30deg_bins_percent": 98.61111111111111,
+      "source": "Passive 550-label train sets reconstructed from v4 pool seeds 1-3"
+    }
+  ],
+  "torsions": {
+    "cc_torsion_deg": "O-C-C-H, where H is a methyl hydrogen nearest the methyl carbon",
+    "co_torsion_deg": "H-O-C-C, where H is the hydroxyl hydrogen nearest oxygen"
+  }
+}

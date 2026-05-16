@@ -1,28 +1,28 @@
 # Passive 550-label baselines vs active-learning results
 
-This comparison uses completed passive 550-label runs on the frozen v4 split and existing AL artifacts. No AL reruns are included. Metrics are reported on held-out test structures in meV and meV/Å.
+This comparison uses completed passive 550-label runs on the frozen v4 split and existing AL artefacts. No AL reruns are included. Metrics are reported on held-out test structures in meV and meV/Å.
 
 ## Direct v4 comparison
 
 | Architecture | Method | Labels | Seeds | Energy MAE (meV) | Force MAE (meV/Å) | Training time (h) | Source |
 |---|---:|---:|---:|---:|---:|---:|---|
-| mace | AL QBC (v4 fixed-member) | 550 | 3 | 1.85 ± 0.27 | 9.05 ± 0.71 | 14.03 ± 0.26 | `results/al_v4/v4_primary_fixed_member/mace_qbc_seed*/metrics.json` |
-| mace | AL RANDOM (v4 fixed-member) | 550 | 3 | 1.87 ± 0.15 | 9.66 ± 0.28 | 2.92 ± 0.08 | `results/al_v4/v4_primary_fixed_member/mace_random_seed*/metrics.json` |
-| mace | Passive single model (v4 split) | 550 | 3 | 1.97 ± 0.07 | 10.31 ± 0.10 | 0.47 ± 0.00 | `results/passive_v4_550/mace_passive_seed*/metrics.json` |
-| nequip | AL QBC (v4 fixed-member) | 550 | 3 | 4.40 ± 1.95 | 10.07 ± 0.56 | 33.72 ± 0.31 | `results/al_v4/v4_primary_fixed_member/nequip_qbc_seed*/metrics.json` |
-| nequip | AL RANDOM (v4 fixed-member) | 550 | 3 | 3.31 ± 0.88 | 11.03 ± 0.34 | 8.04 ± 0.13 | `results/al_v4/v4_primary_fixed_member/nequip_random_seed*/metrics.json` |
-| nequip | Passive single model (v4 split) | 550 | 3 | 3.21 ± 0.59 | 10.65 ± 0.50 | 1.13 ± 0.06 | `results/passive_v4_550/nequip_passive_seed*/metrics.json` |
+| mace | AL QBC (v4 fixed-member) | 550 | 3 | 1.85 ± 0.27 | 9.05 ± 0.71 | 14.03 ± 0.26 | published summary row |
+| mace | AL RANDOM (v4 fixed-member) | 550 | 3 | 1.87 ± 0.15 | 9.66 ± 0.28 | 2.92 ± 0.08 | published summary row |
+| mace | Passive single model (v4 split) | 550 | 3 | 1.97 ± 0.07 | 10.31 ± 0.10 | 0.47 ± 0.00 | published summary row |
+| nequip | AL QBC (v4 fixed-member) | 550 | 3 | 4.40 ± 1.95 | 10.07 ± 0.56 | 33.72 ± 0.31 | published summary row |
+| nequip | AL RANDOM (v4 fixed-member) | 550 | 3 | 3.31 ± 0.88 | 11.03 ± 0.34 | 8.04 ± 0.13 | published summary row |
+| nequip | Passive single model (v4 split) | 550 | 3 | 3.21 ± 0.59 | 10.65 ± 0.50 | 1.13 ± 0.06 | published summary row |
 
 ## Context baselines mentioned in dissertation materials
 
 | Architecture | Method | Labels | Seeds | Energy MAE (meV) | Force MAE (meV/Å) | Training time (h) | Source |
 |---|---:|---:|---:|---:|---:|---:|---|
-| nequip | Passive single model (Phase 2 950 train + 50 valid) | 950 | 1 | 1.30 | 6.79 | n/a | `results/phase2_metrics.json` |
-| mace | AL MHC (historical, not v4) | 550 | 3 | 2.07 ± 0.01 | 10.07 ± 0.11 | 5.98 ± 0.08 | `results/al/mace_mhc_seed*/metrics.json` |
-| mace | AL QBC (historical) | 550 | 3 | 1.63 ± 0.03 | 8.60 ± 0.12 | 14.02 ± 0.27 | `results/al/mace_qbc_seed*/metrics.json` |
-| mace | AL Random (historical) | 550 | 4 | 1.74 ± 0.10 | 9.31 ± 0.38 | 3.84 ± 0.48 | `results/al/random_seed*/metrics.json` |
-| nequip | AL QBC (historical) | 550 | 3 | 3.68 ± 2.05 | 7.71 ± 0.14 | 16.62 ± 0.60 | `results/al/nequip_qbc_seed*/metrics.json` |
-| nequip | AL Random (historical) | 550 | 3 | 4.47 ± 1.96 | 9.23 ± 0.31 | 5.31 ± 0.32 | `results/al/nequip_random_seed*/metrics.json` |
+| nequip | Passive single model (Phase 2 950 train + 50 valid) | 950 | 1 | 1.30 | 6.79 | n/a | published summary row |
+| mace | AL MHC (historical, not v4) | 550 | 3 | 2.07 ± 0.01 | 10.07 ± 0.11 | 5.98 ± 0.08 | published summary row |
+| mace | AL QBC (historical) | 550 | 3 | 1.63 ± 0.03 | 8.60 ± 0.12 | 14.02 ± 0.27 | published summary row |
+| mace | AL Random (historical) | 550 | 4 | 1.74 ± 0.10 | 9.31 ± 0.38 | 3.84 ± 0.48 | published summary row |
+| nequip | AL QBC (historical) | 550 | 3 | 3.68 ± 2.05 | 7.71 ± 0.14 | 16.62 ± 0.60 | published summary row |
+| nequip | AL Random (historical) | 550 | 3 | 4.47 ± 1.96 | 9.23 ± 0.31 | 5.31 ± 0.32 | published summary row |
 
 ## Peer-review interpretation
 
