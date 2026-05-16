@@ -88,12 +88,12 @@ DATA_DIR = PROJECT_ROOT / "data"
 NPZ_PATH = DATA_DIR / "rmd17_ethanol.npz"
 RESULTS_DIR = PROJECT_ROOT / "results" / "al"
 RESULTS_V3_DIR = PROJECT_ROOT / "results" / "al_v3"
-RESULTS_V4_DIR = PROJECT_ROOT / "results" / "al_v4"
+RESULTS_FINAL_DIR = PROJECT_ROOT / "results" / "al_final"
 AL_DATA_DIR = DATA_DIR / "al"
-FROZEN_V4_CONFIG_DIR = PROJECT_ROOT / "configs" / "frozen_v4"
+FINAL_FIXED_MEMBER_CONFIG_DIR = PROJECT_ROOT / "configs" / "final_fixed_member"
 
-SplitMode = Literal["legacy", "v4_audit"]
-ProtocolVersion = Literal["legacy", "v3", "v4"]
+SplitMode = Literal["legacy", "fixed_holdout"]
+ProtocolVersion = Literal["legacy", "v3", "final"]
 EndpointOption = Literal["fixed_member", "random_committee"]
 
 
@@ -153,19 +153,19 @@ def _git_value(args: list[str]) -> str | None:
 
 def infer_protocol_version(run_id: str) -> ProtocolVersion:
     """Infer protocol version from run namespace for backward compatibility."""
-    if run_id.startswith("v4"):
-        return "v4"
+    if run_id.startswith("final"):
+        return "final"
     if run_id.startswith("v3"):
         return "v3"
     if run_id == "legacy":
         return "legacy"
-    return "v4"
+    return "final"
 
 
 def default_results_root(run_id: str, protocol_version: ProtocolVersion) -> Path:
     """Return the default result namespace for a run id and protocol version."""
-    if protocol_version == "v4":
-        return RESULTS_V4_DIR / run_id
+    if protocol_version == "final":
+        return RESULTS_FINAL_DIR / run_id
     if protocol_version == "v3":
         return RESULTS_V3_DIR / run_id
     return RESULTS_DIR
@@ -191,7 +191,7 @@ def build_splits(split_mode: SplitMode = "legacy") -> dict[str, np.ndarray]:
     """Build deterministic splits.
 
     ``legacy`` keeps the original 1000 test + 500 validation + 98500 pool split.
-    ``v4_audit`` reserves an additional 1000-structure final audit set and uses
+    ``fixed_holdout`` reserves an additional 1000-structure final holdout set and uses
     it as the returned primary test set; this supports the v3 plan's stronger
     leakage-control option.
     """
@@ -209,13 +209,13 @@ def build_splits(split_mode: SplitMode = "legacy") -> dict[str, np.ndarray]:
             "pool_indices": pool_idx.astype(np.intp),
         }
 
-    if split_mode == "v4_audit":
+    if split_mode == "fixed_holdout":
         val_idx = shuffled[:N_VAL]
         dev_test_idx = shuffled[N_VAL : N_VAL + N_TEST]
-        audit_test_idx = shuffled[N_VAL + N_TEST : N_VAL + 2 * N_TEST]
+        final_test_idx = shuffled[N_VAL + N_TEST : N_VAL + 2 * N_TEST]
         pool_idx = shuffled[N_VAL + 2 * N_TEST :]
         return {
-            "test_indices": audit_test_idx.astype(np.intp),
+            "test_indices": final_test_idx.astype(np.intp),
             "dev_test_indices": dev_test_idx.astype(np.intp),
             "val_indices": val_idx.astype(np.intp),
             "pool_indices": pool_idx.astype(np.intp),
@@ -243,7 +243,7 @@ def write_split_metadata(
         val_indices=split_data["val_indices"],
         pool_indices=split_data["pool_indices"],
     )
-    # v4_audit has an extra dev test set, so the 3-way report intentionally
+    # fixed_holdout has an extra dev test set, so the 3-way report intentionally
     # does not cover the full dataset.  Record full disjointness separately.
     split_sets = [set(values.tolist()) for values in split_data.values()]
     pairwise_disjoint = all(
@@ -427,8 +427,8 @@ def write_environment_metadata(output_dir: Path) -> None:
     write_json(output_dir / "environment.json", metadata)
 
 
-def v4_expected_runs(endpoint_option: EndpointOption) -> list[dict[str, object]]:
-    """Return the preregistered v4 primary run matrix."""
+def final_expected_runs(endpoint_option: EndpointOption) -> list[dict[str, object]]:
+    """Return the preregistered final primary run matrix."""
     runs: list[dict[str, object]] = []
     for seed in AL_SEEDS:
         runs.extend(
@@ -470,11 +470,11 @@ def v4_expected_runs(endpoint_option: EndpointOption) -> list[dict[str, object]]
     return runs
 
 
-def write_v4_manifest_and_flow(protocol: ExperimentProtocol) -> None:
-    """Persist the v4 primary manifest and initial run-flow table."""
-    if protocol.protocol_version != "v4":
+def write_final_manifest_and_flow(protocol: ExperimentProtocol) -> None:
+    """Persist the final primary manifest and initial run-flow table."""
+    if protocol.protocol_version != "final":
         return
-    expected_runs = v4_expected_runs(protocol.endpoint_option)
+    expected_runs = final_expected_runs(protocol.endpoint_option)
     manifest = {
         "protocol_version": protocol.protocol_version,
         "run_id": protocol.run_id,
@@ -504,7 +504,7 @@ def write_v4_manifest_and_flow(protocol: ExperimentProtocol) -> None:
     if not flow_path.exists():
         flow = {
             "run_id": protocol.run_id,
-            "protocol_version": "v4",
+            "protocol_version": "final",
             "runs": {
                 f"{item['arm']}_seed{item['seed']}": {**item, "status": "planned"}
                 for item in expected_runs
@@ -512,10 +512,10 @@ def write_v4_manifest_and_flow(protocol: ExperimentProtocol) -> None:
         }
         write_json(flow_path, flow)
 
-    if FROZEN_V4_CONFIG_DIR.exists():
+    if FINAL_FIXED_MEMBER_CONFIG_DIR.exists():
         dest = protocol.results_root / "frozen_configs"
         dest.mkdir(parents=True, exist_ok=True)
-        for src in FROZEN_V4_CONFIG_DIR.iterdir():
+        for src in FINAL_FIXED_MEMBER_CONFIG_DIR.iterdir():
             if src.is_file():
                 shutil.copy2(src, dest / src.name)
         write_json(
@@ -535,7 +535,7 @@ def update_run_flow(
     status: str,
     detail: str | None = None,
 ) -> None:
-    """Update v4 run-flow status when the artifact exists."""
+    """Update final run-flow status when the artifact exists."""
     flow_path = results_root / "run_flow.json"
     if not flow_path.exists():
         return
@@ -1199,10 +1199,10 @@ def main() -> None:
         help="Directory prefix for random baseline (e.g. nequip_random)",
     )
     parser.add_argument(
-        "--run-id", help="run namespace; v4* defaults to results/al_v4/RUN_ID"
+        "--run-id", help="run namespace; final* defaults to results/al_final/RUN_ID"
     )
     parser.add_argument(
-        "--protocol-version", choices=["v3", "v4"], help="defaults from run id prefix"
+        "--protocol-version", choices=["v3", "final"], help="defaults from run id prefix"
     )
     parser.add_argument(
         "--endpoint-option",
@@ -1231,7 +1231,7 @@ def main() -> None:
     parser.add_argument("--n-acquisition-rounds", type=int, default=9)
     parser.add_argument(
         "--split-mode",
-        choices=["legacy", "v4_audit"],
+        choices=["legacy", "fixed_holdout"],
         default="legacy",
     )
     parser.add_argument("--dry-run-protocol", action="store_true")
@@ -1239,9 +1239,9 @@ def main() -> None:
     args = parser.parse_args()
 
     protocol = _protocol_from_args(args)
-    if protocol.protocol_version == "v4" and args.all:
+    if protocol.protocol_version == "final" and args.all:
         parser.error(
-            "v4 primary runs must be launched explicitly; --all has an unsafe run matrix"
+            "final primary runs must be launched explicitly; --all has an unsafe run matrix"
         )
     nuclear_charges, coords, energies, forces_arr = load_npz()
     split_data = build_splits(protocol.split_mode)
@@ -1255,7 +1255,7 @@ def main() -> None:
         forces=forces_arr,
         split_data=split_data,
     )
-    write_v4_manifest_and_flow(protocol)
+    write_final_manifest_and_flow(protocol)
     save_shuffle_indices()
 
     committee_seeds = list(range(int(args.committee_size)))
