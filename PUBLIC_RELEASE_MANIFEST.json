@@ -16,7 +16,13 @@
     "scripts/experiments/smoke_test_nequip.py",
     "scripts/setup/01_fetch_md17.py",
     "configs",
-    "tests/test_smoke.py"
+    "tests/test_smoke.py",
+    "scripts/experiments/run_passive_v4_baseline.py",
+    "scripts/experiments/run_mace_mhc_v4_baseline.py",
+    "scripts/hpc/mace_mhc_v4_passive.slurm",
+    "reports/analysis/passive_vs_al_comparison.md",
+    "reports/analysis/passive_vs_al_comparison.json",
+    "reports/analysis/standard_vs_al_v4_summary.md"
   ],
   "source_project": "<redacted-source-project>"
 }
